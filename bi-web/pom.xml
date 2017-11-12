@@ -1,0 +1,99 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+		<groupId>com.bi</groupId>
+		<artifactId>oneData</artifactId>
+		<version>${bi-version}</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>bi-web</artifactId>
+	<packaging>war</packaging>
+    <description>管理后台</description>
+
+	<dependencies>
+        <dependency>
+            <groupId>com.bi</groupId>
+            <artifactId>bi-common</artifactId>
+            <version>${bi-common-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bi</groupId>
+            <artifactId>bi-shiro</artifactId>
+            <version>${bi-version}</version>
+        </dependency>
+		<dependency>
+            <groupId>com.bi</groupId>
+            <artifactId>bi-gen</artifactId>
+            <version>${bi-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bi</groupId>
+            <artifactId>bi-api</artifactId>
+            <version>${bi-version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <!-- 激活spring profile -->
+                    <webResources>
+                        <resource>
+                            <filtering>true</filtering>
+                            <directory>src/main/webapp</directory>
+                            <includes>
+                                <include>**/web.xml</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                    <warSourceDirectory>src/main/webapp</warSourceDirectory>
+                    <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.js</include>
+                </includes>
+            </resource>
+
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <!-- **/*.properties 是指包括根目录或子目录所有properties类型的文件 -->
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                </includes>
+                <!-- 先排除dev、product 目录下的文件 -->
+                <excludes>
+                    <exclude>dev/*</exclude>
+                    <exclude>test/*</exclude>
+                    <exclude>product/*</exclude>
+                </excludes>
+            </resource>
+
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <!-- 包含，若没有指定则默认为 activeByDefault 标签定义的 profile -->
+                <includes>
+                    <include>spring-mvc.xml</include>
+                    <include>spring-sso-redis.xml</include>
+                    <include>${profiles.activation}/*</include>
+                </includes>
+            </resource>
+        </resources>
+
+        <finalName>oneData2</finalName>
+
+	</build>
+
+</project>

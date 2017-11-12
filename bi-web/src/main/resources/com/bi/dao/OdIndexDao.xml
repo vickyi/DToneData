@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bi.dao.OdIndexDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bi.entity.OdIndexEntity" id="odIndexMap">
+        <result property="id" column="id"/>
+        <result property="indexName" column="index_name"/>
+        <result property="index" column="index"/>
+        <result property="businessType" column="business_type"/>
+        <result property="indexType" column="index_type"/>
+        <result property="indexDesc" column="index_desc"/>
+        <result property="database" column="database"/>
+        <result property="databaseTable" column="database_table"/>
+        <result property="indexCompute" column="index_compute"/>
+		<result property="whereString" column="where_string"/>
+        <result property="useScenes" column="use_scenes"/>
+        <result property="olapNodes" column="olap_nodes"/>
+        <result property="gxtNodes" column="gxt_nodes"/>
+        <result property="status" column="status"/>
+        <result property="version" column="version"/>
+        <result property="modifyDesc" column="modify_desc"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createName" column="create_name"/>
+        <result property="modifyTime" column="modify_time"/>
+        <result property="modifyName" column="modify_name"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.bi.entity.OdIndexEntity">
+		select * from od_index where id = #{value}
+	</select>
+
+	<select id="queryTotalByIndexName" resultType="int">
+		select count(*) from od_index
+		<where>
+			<if test="index_name != null and index_name.trim() != ''">
+				and `index_name` = #{index_name}
+			</if>
+			<if test="del != null and del.trim() != ''">
+				and `del` = #{del}
+			</if>
+		</where>
+	</select>
+
+	<select id="queryList" resultType="com.bi.entity.OdIndexEntity">
+		select * from od_index
+		<where>
+			<if test="index_name != null and index_name.trim() != ''">
+				and (`index_name` like concat('%',#{index_name},'%') or `index` like concat('%',#{index_name},'%'))
+			</if>
+			<if test="index_name_eq != null and index_name_eq.trim() != ''">
+				and `index_name` = #{index_name_eq}
+			</if>
+			<if test="business_type != null and business_type.trim() != ''">
+				and `business_type` = #{business_type}
+			</if>
+			<if test="index_type != null and index_type.trim() != ''">
+				and `index_type` = #{index_type}
+			</if>
+			<if test="status != null and status.trim() != ''">
+				and `status` = #{status}
+			</if>
+			<if test="del != null and del.trim() != ''">
+				and `del` = #{del}
+			</if>
+			<if test="ids != null">
+				and id in
+				<foreach item="ids" collection="ids" open="(" separator="," close=")">
+					#{ids}
+				</foreach>
+			</if>
+		</where>
+        <choose>
+			<when test="sidx != null and sidx.trim() != ''">
+				order by ${sidx} ${order}
+			</when>
+			<otherwise>
+				order by business_type asc,index_type asc,index_name asc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from od_index
+		<where>
+			<if test="index_name != null and index_name.trim() != ''">
+				and (`index_name` like concat('%',#{index_name},'%') or `index` like concat('%',#{index_name},'%'))
+			</if>
+			<if test="business_type != null and business_type.trim() != ''">
+				and `business_type` = #{business_type}
+			</if>
+			<if test="index_type != null and index_type.trim() != ''">
+				and `index_type` = #{index_type}
+			</if>
+			<if test="status != null and status.trim() != ''">
+				and `status` = #{status}
+			</if>
+			<if test="del != null and del.trim() != ''">
+				and `del` = #{del}
+			</if>
+		</where>
+	</select>
+
+	<select id="queryListGroupByIndexName" resultType="com.bi.entity.OdIndexEntity">
+		select * from (
+        SELECT * FROM od_index
+        <where>
+            <if test="index_name != null and index_name.trim() != ''">
+				and (`index_name` like concat('%',#{index_name},'%') or `index` like concat('%',#{index_name},'%'))
+            </if>
+            <if test="business_type != null and business_type.trim() != ''">
+                and `business_type` = #{business_type}
+            </if>
+            <if test="index_type != null and index_type.trim() != ''">
+                and `index_type` = #{index_type}
+            </if>
+            <if test="status != null and status.trim() != ''">
+                and `status` = #{status}
+            </if>
+            <if test="del != null and del.trim() != ''">
+                and `del` = #{del}
+            </if>
+        </where>
+         ORDER BY version DESC
+        ) AS a
+		group BY index_name
+		<choose>
+			<when test="sidx != null and sidx.trim() != ''">
+				order by ${sidx} ${order}
+			</when>
+			<otherwise>
+				order by business_type asc,index_type asc,index_name asc
+			</otherwise>
+		</choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+
+	<select id="queryTotalGroupByIndexName" resultType="int">
+		select count(*) from (
+        SELECT * FROM (
+          SELECT * FROM od_index
+            <where>
+                <if test="index_name != null and index_name.trim() != ''">
+					and (`index_name` like concat('%',#{index_name},'%') or `index` like concat('%',#{index_name},'%'))
+                </if>
+                <if test="business_type != null and business_type.trim() != ''">
+                    and `business_type` = #{business_type}
+                </if>
+                <if test="index_type != null and index_type.trim() != ''">
+                    and `index_type` = #{index_type}
+                </if>
+                <if test="status != null and status.trim() != ''">
+                    and `status` = #{status}
+                </if>
+                <if test="del != null and del.trim() != ''">
+                    and `del` = #{del}
+                </if>
+            </where>
+          ORDER BY version DESC
+        ) AS a
+		GROUP BY index_name ) AS b
+	</select>
+	 
+	<insert id="save" parameterType="com.bi.entity.OdIndexEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into od_index
+		(
+			`index_name`, 
+			`index`, 
+			`business_type`, 
+			`index_type`, 
+			`index_desc`, 
+			`database`, 
+			`database_table`, 
+			`index_compute`,
+			`where_string`,
+			`use_scenes`, 
+			`olap_nodes`, 
+			`gxt_nodes`, 
+			`status`, 
+			`version`,
+			`del`,
+			`modify_desc`, 
+			`create_time`, 
+			`create_name`, 
+			`modify_time`, 
+			`modify_name`
+		)
+		values
+		(
+			#{indexName}, 
+			#{index}, 
+			#{businessType}, 
+			#{indexType}, 
+			#{indexDesc}, 
+			#{database}, 
+			#{databaseTable}, 
+			#{indexCompute},
+			#{whereString},
+			#{useScenes}, 
+			#{olapNodes}, 
+			#{gxtNodes}, 
+			#{status}, 
+			#{version},
+			#{del},
+			#{modifyDesc}, 
+			#{createTime}, 
+			#{createName}, 
+			#{modifyTime}, 
+			#{modifyName}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.bi.entity.OdIndexEntity">
+		update od_index 
+		<set>
+			<if test="indexName != null">`index_name` = #{indexName}, </if>
+			<if test="index != null">`index` = #{index}, </if>
+			<if test="businessType != null">`business_type` = #{businessType}, </if>
+			<if test="indexType != null">`index_type` = #{indexType}, </if>
+			<if test="indexDesc != null">`index_desc` = #{indexDesc}, </if>
+			<if test="database != null">`database` = #{database}, </if>
+			<if test="databaseTable != null">`database_table` = #{databaseTable}, </if>
+			<if test="indexCompute != null">`index_compute` = #{indexCompute}, </if>
+			<if test="whereString != null">`where_string` = #{whereString}, </if>
+			<if test="useScenes != null">`use_scenes` = #{useScenes}, </if>
+			<if test="olapNodes != null">`olap_nodes` = #{olapNodes}, </if>
+			<if test="gxtNodes != null">`gxt_nodes` = #{gxtNodes}, </if>
+			<if test="status != null">`status` = #{status}, </if>
+			<if test="version != null">`version` = #{version}, </if>
+			<if test="del != null">`del` = #{del}, </if>
+			<if test="modifyDesc != null">`modify_desc` = #{modifyDesc}, </if>
+			<if test="createTime != null">`create_time` = #{createTime}, </if>
+			<if test="createName != null">`create_name` = #{createName}, </if>
+			<if test="modifyTime != null">`modify_time` = #{modifyTime}, </if>
+			<if test="modifyName != null">`modify_name` = #{modifyName}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from od_index where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from od_index where id in 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

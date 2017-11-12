@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>表管理</title> #parse("sys/header.html")
+<style>
+.lab { height: 34px; line-height: 34px;}
+.wt7 { width: 7%;}
+.wt14 { width: 14%;}
+.pd0 { padding: 0;}
+.textl { text-align: left;}
+.mt10 { margin-top: 10px;}
+.Wdateinput { height: 25px; line-height: 25px;}
+</style>
+
+</head>
+<body>
+	<div id="rrapp" v-cloak>
+		<div v-show="showList">
+			<div class="grid-btn">
+				<div class="col-sm-1">
+					<label class="form-label lab">数据主题</label> 
+				</div>	
+				<div class=" col-sm-1 wt14">
+					<!-- 获取枚举值 -->
+					<select name="type"
+						class="form-control" v-model="q.type">
+						<option value="-1">全部</option>
+						<option v-for="option in keymap[1]" v-bind:value="option.id">
+                            {{ option.name }}
+                        </option>
+					</select>
+				</div>
+				<div class=" col-sm-1 wt7">
+					<label class="form-label lab">状态</label>
+					</div>
+				<div class=" col-sm-1 wt14">
+					<select name="status"
+						class="form-control" v-model="q.status">
+						<option value="-1">全部</option>
+						<option value="1">有效</option>
+						<option value="0">无效</option>
+					</select>
+				</div>
+				<div class=" col-sm-2">
+					<input type="text" class="form-control" v-model="q.tbname"
+						@keyup.enter="query" placeholder="请输入表名">
+				</div>
+
+				<a class="btn btn-primary" @click="query">查询</a> <a
+					class="btn btn-primary" @click="exportCsv">导出报表</a>
+ 
+			</div>
+			<table id="jqGrid"></table>
+			<div id="jqGridPager"></div>
+		</div>
+
+		<div v-show="!showList & !showFields" class="panel panel-default">
+			<div class="panel-heading">{{title}}</div>
+			<form class="form-horizontal">
+
+				<div class="form-group">
+					<div class="col-sm-2 control-label">表名</div>
+					<div class="col-sm-2 control-label">{{odTable.tableName}}</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-2 control-label">数据库类型</div>
+					<div class="col-sm-2 pd0">
+						<select name="status" class="form-control"
+							v-model="odTable.databaseType">
+							<option v-for="option in keymap[3]" v-bind:value="option.id">
+	                            {{ option.name }}
+	                        </option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-2 control-label">表描述</div>
+					<div class="col-sm-10">
+						<input type="text" class="form-control"
+							v-model="odTable.tableDesc" placeholder="表描述" />
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-2 control-label">更新逻辑</div>
+					<div class="col-sm-10">
+						<input type="text" class="form-control"
+							v-model="odTable.updateLogic" placeholder="更新逻辑" />
+					</div>
+				</div>
+				
+				<!-- select -->
+				<div class="form-group">
+					<div class="col-sm-2 control-label">更新频率</div>
+					<div class="col-sm-2 pd0">
+						<select name="status" class="form-control"
+								v-model="odTable.updateFrequency">
+								<option v-for="option in keymap[2]" v-bind:value="option.id">
+		                            {{ option.name }}
+		                        </option>
+							</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-2 control-label">数据范围</div>
+					<div class="col-sm-10">
+						<input type="text" class="form-control"
+							v-model="odTable.dataRange" placeholder="数据范围" />
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-2 control-label">使用说明</div>
+					<div class="col-sm-10">
+						<input type="text" class="form-control"
+							v-model="odTable.instructions" placeholder="使用说明" />
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-2 control-label">负责人</div>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" v-model="odTable.owner"
+							placeholder="负责人" />
+					</div>
+				</div>
+				<!-- (1 有效 0 无效) -->
+				<div class="form-group">
+					<div class="col-sm-2 control-label">状态</div>
+					<div class="col-sm-2 control-label textl" style="text-align: left;">
+						<input type="radio" value="1" v-model="odTable.status" />有效 
+						<input type="radio" value="0" v-model="odTable.status" />无效 
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<div class="col-sm-2 control-label">版本</div>
+					<input type="hidden" v-model="odTable.version" />
+					<div class="col-sm-5 control-label textl" style="text-align: left;">
+						<input type="radio" value="1" v-model="odTable.version_select" />小版本 
+						<input type="radio" value="2" v-model="odTable.version_select" />大版本 
+						<input type="radio" value="0" v-model="odTable.version_select" />不更改 
+					</div>
+					
+				</div>
+				<div class="form-group">
+					<div class="col-sm-2 control-label">更改说明</div>
+					<div class="col-sm-10">
+						<input type="text" class="form-control"
+							v-model="odTable.modifyDesc" placeholder="更改说明" />
+					</div>
+				</div>
+				  
+				<div class="form-group">
+					<div class="col-sm-2 control-label"></div>
+					<input type="button" class="btn btn-primary" @click="saveOrUpdate"
+						value="确定" /> &nbsp;&nbsp;<input type="button"
+						class="btn btn-warning" @click="reload" value="返回" />
+				</div>
+			</form>
+		</div>
+		
+		<!-- 字段编辑页面 -->
+		<div v-show="showFields">
+			<table id="jqGrid_field"></table>
+			<div id="jqGridPagerx"></div>
+			<div class="form-group mt10">
+				<div class="col-sm-2 control-label"></div>
+				<input type="button" class="btn btn-primary" @click="updateFields"
+					value="确定" /> &nbsp;&nbsp;<input type="button"
+					class="btn btn-warning" @click="reload" value="返回" />
+			</div>
+		</div>
+		
+	</div>
+
+	<script src="${rc.contextPath}/js/sys/odtable.js?_${date.systemTime}"></script>
+</body>
+</html>

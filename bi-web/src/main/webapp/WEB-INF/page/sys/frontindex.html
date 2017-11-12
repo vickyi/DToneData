@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>指标表</title>
+#parse("sys/header.html")
+	<style>
+		.col-sm-1{width:15%}
+		.col-sm-2{width:19%;margin-top: 8px;}
+		.col-sm-3{width:40%}
+		.col-sm-4{width:31%}
+		.form-horizontal .title-col-sm-1{width:17%;text-align: left}
+		.form-horizontal .title-col-sm-2{width:33%}
+		.form-horizontal .title-col-sm-3{width:22%;text-align: left}
+		.form-horizontal .title-col-sm-4{width:28%}
+		.table thead th{height: 25px;text-align: center;vertical-align: middle!important;}
+		.table tbody td{height: 25px;text-align: center;vertical-align: middle!important;}
+		.table-bordered>thead>tr>td, .table-bordered>thead>tr>th {
+			 border-bottom-width: 1px;
+		}
+        #jqGridPager_left{
+            width:0px;
+        }
+		#cb_jqGrid{display: none;}
+	</style>
+</head>
+<body>
+<div id="rrapp" v-cloak>
+	<div v-show="showList" style="width:40%;float:left;">
+		<div class="form-horizontal grid-btn" style="padding-top:0px;">
+			<div class="form-group">
+				<label class="col-sm-2">业务类型</label>&nbsp;
+				<select name="business_type" class="form-control col-sm-3" v-model="q.business_type" >
+					<option value="">全部</option>
+					<option value="流量">流量</option>
+					<option value="会员">会员</option>
+					<option value="销售">销售</option>
+					<option value="售后">售后</option>
+					<option value="品控">品控</option>
+					<option value="财务">财务</option>
+					<option value="客服">客服</option>
+					<option value="供应链管理">供应链管理</option>
+					<option value="违规处罚">违规处罚</option>
+				</select>&nbsp;
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2">指标类型</label>&nbsp;
+				<select  name="index_type" class="form-control col-sm-3" v-model="q.index_type">
+					<option value="">全部</option>
+					<option value="术语">术语</option>
+					<option value="基础指标">基础指标</option>
+					<option value="衍生指标">衍生指标</option>
+					<option value="复合指标">复合指标</option>
+					<option value="维度">维度</option>
+				</select>&nbsp;
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2">状态</label>&nbsp;
+				<select  name="status" class="form-control col-sm-3" v-model="q.status">
+					<option value="">全部</option>
+					<option value="1">有效</option>
+					<option value="0">无效</option>
+				</select>&nbsp;
+			</div>
+			<div class="form-group">
+				<input type="text" name="index_name" id="search-indexName" class="form-control col-sm-4" v-model="q.index_name" placeholder=" 请输入指标名称 "
+					   autocomplete="off" data-provide="typeahead"
+				/>&nbsp;&nbsp;&nbsp;
+				<a class="btn btn-primary" @click="query"><i class="fa fa-plus"></i>&nbsp;查询</a>&nbsp;
+                <a class="btn btn-primary" @click="exportCsv">导出</a>
+			</div>
+
+		</div>
+	    <table id="jqGrid"></table>
+	    <div id="jqGridPager"></div>
+    </div>
+    
+    <div v-show="showDetail" class="panel panel-default" style="width:58%;min-height:664px;float:left;margin-left: 20px;">
+		<div class="panel-heading">指标详情</div>
+		<div v-show="showSingle">
+			<div class="form-horizontal" style="width: 100%">
+				<div class="form-group">
+					<div class="col-sm-1 control-label title-col-sm-1">指标名称：</div>
+					<div class="col-sm-1 control-label title-col-sm-2" style="text-align: left">{{odIndex.indexName}}</div>
+					<div class="col-sm-1 control-label title-col-sm-3" >指标英文名称：</div>
+					<div class="col-sm-1 control-label title-col-sm-4" style="text-align: left">{{odIndex.index}}</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-1 control-label title-col-sm-1" >业务类型：</div>
+					<div class="col-sm-1 control-label title-col-sm-2" style="text-align: left">{{odIndex.businessType}}</div>
+					<div class="col-sm-1 control-label title-col-sm-3" >创建时间：</div>
+					<div class="col-sm-1 control-label title-col-sm-4" style="text-align: left">{{odIndex.createTime}}</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-1 control-label title-col-sm-1" >指标类型：</div>
+					<div class="col-sm-1 control-label title-col-sm-2" style="text-align: left">{{odIndex.indexType}}</div>
+					<div class="col-sm-1 control-label title-col-sm-3" >最后更改时间：</div>
+					<div class="col-sm-1 control-label title-col-sm-4" style="text-align: left">{{odIndex.modifyTime}}</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-1 control-label title-col-sm-1">指标定义：</div>
+					<div class="col-sm-1 control-label " style="width:80%;text-align: left">{{odIndex.indexDesc}}</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-1 control-label title-col-sm-1">技术定义：</div>
+					<div class="col-sm-1 control-label"  style="width:80%;text-align: left">
+						<table width="100%" class="table table-bordered">
+							<thead>
+							<tr>
+								<th>数据库</th>
+								<th>依赖数据表</th>
+								<th>计算方式</th>
+							</tr>
+							</thead>
+							<tbody>
+							<tr height="32">
+								<td>{{odIndex.database}}</td>
+								<td>{{odIndex.databaseTable}}</td>
+								<td>{{odIndex.indexCompute}}</td>
+							</tr>
+							<tr height="32">
+								<td colspan="3" style="text-align: left;text-indent: 1em;">{{odIndex.whereString}}</td>
+							</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-1 control-label title-col-sm-1">应用场景：</div>
+					<div class="col-sm-1 control-label" style="width:80%;text-align: left">{{odIndex.useScenes}}</div>
+				</div>
+			</div>
+			<div>
+				<ul class="nav nav-tabs" role="tablist">
+					<li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">核心报表</a></li>
+					<li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">历史版本</a></li>
+				</ul>
+
+				<div class="tab-content">
+					<div role="tabpanel" class="tab-pane active" id="home" style=" width: 100%;padding:15px;min-height: 257px;">
+						<table style="margin-top: 5px;" class="table table-bordered">
+							<thead>
+							<tr>
+								<th style="width:20%">报表平台</th>
+								<th>报表名称</th>
+							</tr>
+							</thead>
+							<tbody>
+							<tr height="32">
+								<td>OLAP</td>
+								<td style="text-align: left;">{{odIndex.olapNodes}}</td>
+							</tr>
+							<tr height="32">
+								<td>观星台</td>
+								<td style="text-align: left;">{{odIndex.gxtNodes}}</td>
+							</tr>
+							</tbody>
+						</table>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="profile" style="width: 100%;padding:15px;">
+						<div style="overflow: auto;min-height:226px;" >
+							<table style="margin-top: 5px;width:1500px;" class="table table-bordered">
+								<thead>
+								<tr>
+									<th>版本号</th>
+									<th>指标英文名</th>
+									<th>业务类型</th>
+									<th>指标类型</th>
+									<th>指标定义</th>
+									<th>技术定义</th>
+									<th>状态</th>
+									<th>更改日期</th>
+									<th>更改人</th>
+									<th>变更说明</th>
+								</tr>
+								</thead>
+								<tbody>
+								<tr height="32" v-for="hisOdIndex in hisOdIndexs">
+									<td>{{hisOdIndex.version}}</td>
+									<td>{{hisOdIndex.index}}</td>
+									<td>{{hisOdIndex.businessType}}</td>
+									<td>{{hisOdIndex.indexType}}</td>
+									<td>{{hisOdIndex.indexDesc}}</td>
+									<td style="text-align: left;">{{hisOdIndex.database}}&nbsp;{{hisOdIndex.databaseTable}}&nbsp;{{hisOdIndex.indexCompute}}</td>
+									<td v-if="hisOdIndex.status == 1">有效</td>
+									<td v-else>无效</td>
+									<td>{{hisOdIndex.modifyTime}}</td>
+									<td>{{hisOdIndex.modifyName}}</td>
+									<td>{{hisOdIndex.modifyDesc}}</td>
+								</tr>
+								</tbody>
+							</table>
+							<div style="width:1500px;height: 20px;"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div v-show="!showSingle">
+			<table width="100%" style="border-left: 0px;" class="table table-bordered">
+				<thead>
+				<tr v-for="odIndex in odIndexs">
+
+					<template v-if="odIndex[0] != 'define' && odIndex[0] != 'id' ">
+							<th style="text-align: left;width:18%;text-indent: 1em;" v-if="odIndex[0]=='database' || odIndex[0]=='databaseTable' || odIndex[0]=='indexCompute' || odIndex[0]=='whereString'">{{odIndex[1]}}</th>
+							<th style="text-align: left;width:18%"  v-else>{{odIndex[1]}}</th>
+							<template v-if = "odIndex[0]=='indexName'">
+								<td style="text-align: left;width:29%"><a href="#"  @click="jumpSingle(odIndexs[0][2],odIndexs[0])">{{odIndex[2]}}</a></td>
+								<td style="text-align: left;width:29%"><a href="#" @click="jumpSingle(odIndexs[0][3],odIndexs[0])">{{odIndex[3]}}</a></td>
+								<td style="text-align: left;width:29%" v-if="odIndex.length>4"><a href="#" @click="jumpSingle(odIndexs[0][4],odIndexs[0])">{{odIndex[4]}}</a></td>
+							</template>
+							<template v-else>
+								<td style="text-align: left;width:29%">{{odIndex[2]}}</td>
+								<td style="text-align: left;width:29%">{{odIndex[3]}}</td>
+								<td style="text-align: left;width:29%" v-if="odIndex.length>4">{{odIndex[4]}}</td>
+							</template>
+					</template>
+				</tr>
+				</thead>
+			</table>
+		</div>
+
+	</div>
+</div>
+
+
+<script src="${rc.contextPath}/js/sys/frontindex.js?_${date.systemTime}"></script>
+</body>
+</html>

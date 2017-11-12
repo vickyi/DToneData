@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bi.dao.OdTableDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bi.entity.OdTableEntity" id="odTableMap">
+        <result property="id" column="id"/>
+        <result property="tableId" column="table_id"/>
+        <result property="tableName" column="table_name"/>
+        <result property="dataTopic" column="data_topic"/>
+        
+        <!-- 新增字段 -->
+        <result property="tableType" column="table_type"/>
+        <result property="databaseId" column="database_id"/>
+        <result property="databaseName" column="database_name"/>
+        <result property="sdId" column="sd_id"/>
+        
+        <result property="databaseType" column="database_type"/>
+        <result property="tableDesc" column="table_desc"/>
+        <result property="updateLogic" column="update_logic"/>
+        <result property="updateFrequency" column="update_frequency"/>
+        <result property="dataRange" column="data_range"/>
+        <result property="instructions" column="instructions"/>
+        <result property="owner" column="owner"/>
+        <result property="status" column="status"/>
+        <result property="version" column="version"/>
+        <result property="datas" column="datas"/>
+        <result property="modifyDesc" column="modify_desc"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createName" column="create_name"/>
+        <result property="modifyTime" column="modify_time"/>
+        <result property="modifyName" column="modify_name"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.bi.entity.OdTableEntity">
+		select * from od_table where table_id = #{value} order by version desc limit 1
+	</select>
+	
+	<select id="queryObjectById" resultType="com.bi.entity.OdTableEntity">
+		select * from od_table where id = #{value} limit 1
+	</select>
+
+	<select id="queryList" resultType="com.bi.entity.OdTableEntity">
+		select * from (
+			select * from od_table
+			<where>
+				<if test="type != null and type.trim() != '' and type != -1">
+					and `data_topic` = #{type}
+				</if>
+				<if test="status != null and status.trim() != '' and status != -1">
+					and `status` = #{status}
+				</if>
+				<if test="tbname != null and tbname.trim() != ''">
+					and `table_name` like concat('%',#{tbname},'%')
+				</if>
+				<!-- 用于数据字典按字段查询，循环取出 -->
+				<if test="tbids != null ">
+					and `table_id` in
+					<foreach item="ids" collection="tbids" open="(" separator="," close=")">
+				     #{ids}
+				    </foreach>
+				</if>
+				
+			</where>
+			
+			order by table_id,version desc
+		) as b
+		group by table_id
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+ 		select count(*) from (
+			select table_id from od_table 
+			<where>
+				<if test="type != null and type.trim() != '' and type != -1">
+					and `data_topic` = #{type}
+				</if>
+				<if test="status != null and status.trim() != '' and status != -1">
+					and `status` = #{status}
+				</if>
+				<if test="tbname != null and tbname.trim() != ''">
+					and `table_name` like concat('%',#{tbname},'%')
+				</if>
+				<!-- 用于数据字典按字段查询，循环取出 -->
+				<if test="tbids != null ">
+					and `table_id` in
+					<foreach item="ids" collection="tbids" open="(" separator="," close=")">
+				     #{ids}
+				    </foreach>
+				</if>
+				
+			</where>
+			group by table_id
+		) as tb
+	</select>
+	
+	<!-- 根据条件查询所有的历史版本记录 -->
+	<select id="queryVersionList" resultType="com.bi.entity.OdTableEntity">
+			select * from od_table
+			<where>
+				<if test="type != null and type.trim() != '' and type != -1">
+					and `data_topic` = #{type}
+				</if>
+				<if test="status != null and status.trim() != '' and status != -1">
+					and `status` = #{status}
+				</if>
+				<if test="tbname != null and tbname.trim() != ''">
+					and `table_name` like concat('%',#{tbname},'%')
+				</if>
+				<!-- 用于查询表历史版本 -->
+				<if test="table_id != null">
+					and `table_id` = #{table_id}
+				</if>
+				
+			</where>
+			
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by table_id,version desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	 
+	<insert id="save" parameterType="com.bi.entity.OdTableEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into od_table
+		(
+			`table_id`, 
+			`table_name`, 
+			`data_topic`, 
+			
+			`table_type`, 
+			`database_id`, 
+			`database_name`, 
+			`sd_id`, 
+			
+			`database_type`, 
+			`table_desc`, 
+			`update_logic`, 
+			`update_frequency`, 
+			`data_range`, 
+			`instructions`, 
+			`owner`, 
+			`status`, 
+			`version`, 
+			`datas`, 
+			`modify_desc`, 
+			`create_time`, 
+			`create_name`, 
+			`modify_time`, 
+			`modify_name`
+		)
+		values
+		(
+			#{tableId}, 
+			#{tableName}, 
+			#{dataTopic}, 
+			
+			#{tableType}, 
+			#{databaseId}, 
+			#{databaseName}, 
+			#{sdId}, 
+			
+			#{databaseType}, 
+			#{tableDesc}, 
+			#{updateLogic}, 
+			#{updateFrequency}, 
+			#{dataRange}, 
+			#{instructions}, 
+			#{owner}, 
+			#{status}, 
+			#{version}, 
+			#{datas}, 
+			#{modifyDesc}, 
+			#{createTime}, 
+			#{createName}, 
+			#{modifyTime}, 
+			#{modifyName}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.bi.entity.OdTableEntity">
+		update od_table 
+		<set>
+			<if test="tableId != null">`table_id` = #{tableId}, </if>
+			<if test="tableName != null">`table_name` = #{tableName}, </if>
+			<if test="dataTopic != null">`data_topic` = #{dataTopic}, </if>
+			
+			<if test="tableType != null">`table_type` = #{tableType}, </if>
+			<if test="databaseId != null">`database_id` = #{databaseId}, </if>
+			<if test="databaseName != null">`database_name` = #{databaseName}, </if>
+			<if test="sdId != null">`sd_id` = #{sdId}, </if>
+			
+			<if test="databaseType != null">`database_type` = #{databaseType}, </if>
+			<if test="tableDesc != null">`table_desc` = #{tableDesc}, </if>
+			<if test="updateLogic != null">`update_logic` = #{updateLogic}, </if>
+			<if test="updateFrequency != null">`update_frequency` = #{updateFrequency}, </if>
+			<if test="dataRange != null">`data_range` = #{dataRange}, </if>
+			<if test="instructions != null">`instructions` = #{instructions}, </if>
+			<if test="owner != null">`owner` = #{owner}, </if>
+			<if test="status != null">`status` = #{status}, </if>
+			<if test="version != null">`version` = #{version}, </if>
+			<if test="datas != null">`datas` = #{datas}, </if>
+			<if test="modifyDesc != null">`modify_desc` = #{modifyDesc}, </if>
+			<if test="createTime != null">`create_time` = #{createTime}, </if>
+			<if test="createName != null">`create_name` = #{createName}, </if>
+			<if test="modifyTime != null">`modify_time` = #{modifyTime}, </if>
+			<if test="modifyName != null">`modify_name` = #{modifyName}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from od_table where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from od_table where id in 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

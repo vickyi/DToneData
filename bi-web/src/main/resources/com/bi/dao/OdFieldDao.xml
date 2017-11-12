@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bi.dao.OdFieldDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bi.entity.OdFieldEntity" id="odFieldMap">
+        <result property="id" column="id"/>
+        <result property="tableId" column="table_id"/>
+        <result property="tableName" column="table_name"/>
+        <result property="field" column="field"/>
+        <result property="fieldName" column="field_name"/>
+        <result property="fieldType" column="field_type"/>
+        <result property="fieldLength" column="field_length"/>
+        <result property="isNull" column="is_null"/>
+        <result property="isKey" column="is_key"/>
+        <result property="enabledTime" column="enabled_time"/>
+        <result property="expiryTime" column="expiry_time"/>
+        <result property="relationTableId" column="relation_table_id"/>
+        <result property="relationTable" column="relation_table"/>
+        <result property="remark" column="remark"/>
+        <result property="modifyName" column="modify_name"/>
+        <result property="modifyTime" column="modify_time"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.bi.entity.OdFieldEntity">
+		select * from od_field where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.bi.entity.OdFieldEntity">
+		select * from od_field
+			<where>
+				<if test="table_id != null">
+					and `table_id` = #{table_id}
+				</if>
+				<if test="field != null and field.trim() != ''">
+					and `field` like concat('%',#{field},'%')
+				</if>
+			</where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from od_field 
+		<where>
+				<if test="table_id != null">
+					`table_id` = #{table_id}
+				</if>
+			</where>
+	</select>
+	 
+	<insert id="save" parameterType="com.bi.entity.OdFieldEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into od_field
+		(
+			`table_id`, 
+			`table_name`, 
+			`field`, 
+			`field_name`, 
+			`field_type`, 
+			`field_length`, 
+			`is_null`, 
+			`is_key`, 
+			`enabled_time`, 
+			`expiry_time`, 
+			`relation_table_id`, 
+			`relation_table`, 
+			`remark`, 
+			`modify_name`, 
+			`modify_time`
+		)
+		values
+		(
+			#{tableId}, 
+			#{tableName}, 
+			#{field}, 
+			#{fieldName}, 
+			#{fieldType}, 
+			#{fieldLength}, 
+			#{isNull}, 
+			#{isKey}, 
+			#{enabledTime}, 
+			#{expiryTime}, 
+			#{relationTableId}, 
+			#{relationTable}, 
+			#{remark}, 
+			#{modifyName}, 
+			#{modifyTime}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.bi.entity.OdFieldEntity">
+		update od_field 
+		<set>
+			<if test="tableId != null">`table_id` = #{tableId}, </if>
+			<if test="tableName != null">`table_name` = #{tableName}, </if>
+			<if test="field != null">`field` = #{field}, </if>
+			<if test="fieldName != null">`field_name` = #{fieldName}, </if>
+			<if test="fieldType != null">`field_type` = #{fieldType}, </if>
+			<if test="fieldLength != null">`field_length` = #{fieldLength}, </if>
+			<if test="isNull != null">`is_null` = #{isNull}, </if>
+			<if test="isKey != null">`is_key` = #{isKey}, </if>
+			<if test="enabledTime != null">`enabled_time` = #{enabledTime}, </if>
+			<if test="expiryTime != null">`expiry_time` = #{expiryTime}, </if>
+			<if test="relationTableId != null">`relation_table_id` = #{relationTableId}, </if>
+			<if test="relationTable != null">`relation_table` = #{relationTable}, </if>
+			<if test="remark != null">`remark` = #{remark}, </if>
+			<if test="modifyName != null">`modify_name` = #{modifyName}, </if>
+			<if test="modifyTime != null">`modify_time` = #{modifyTime}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from od_field where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from od_field where id in 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

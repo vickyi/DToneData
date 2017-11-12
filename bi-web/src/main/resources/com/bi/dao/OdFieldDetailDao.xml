@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bi.dao.OdFieldDetailDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bi.entity.OdFieldDetailEntity" id="odFieldDetailMap">
+        <result property="id" column="id"/>
+        <result property="fid" column="fid"/>
+        <result property="enabledTime" column="enabled_time"/>
+        <result property="expiryTime" column="expiry_time"/>
+        <result property="relationTableId" column="relation_table_id"/>
+        <result property="relationTable" column="relation_table"/>
+        <result property="remark" column="remark"/>
+        <result property="version" column="version"/>
+        <result property="modifyName" column="modify_name"/>
+        <result property="modifyTime" column="modify_time"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.bi.entity.OdFieldDetailEntity">
+		select * from od_field_detail where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.bi.entity.OdFieldDetailEntity">
+		select * from od_field_detail
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from od_field_detail 
+	</select>
+	 
+	<insert id="save" parameterType="com.bi.entity.OdFieldDetailEntity" useGeneratedKeys="true" keyProperty="id">
+		insert into od_field_detail
+		(
+			`fid`, 
+			`enabled_time`, 
+			`expiry_time`, 
+			`relation_table_id`, 
+			`relation_table`, 
+			`remark`, 
+			`version`, 
+			`modify_name`, 
+			`modify_time`
+		)
+		values
+		(
+			#{fid}, 
+			#{enabledTime}, 
+			#{expiryTime}, 
+			#{relationTableId}, 
+			#{relationTable}, 
+			#{remark}, 
+			#{version}, 
+			#{modifyName}, 
+			#{modifyTime}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.bi.entity.OdFieldDetailEntity">
+		update od_field_detail 
+		<set>
+			<if test="fid != null">`fid` = #{fid}, </if>
+			<if test="enabledTime != null">`enabled_time` = #{enabledTime}, </if>
+			<if test="expiryTime != null">`expiry_time` = #{expiryTime}, </if>
+			<if test="relationTableId != null">`relation_table_id` = #{relationTableId}, </if>
+			<if test="relationTable != null">`relation_table` = #{relationTable}, </if>
+			<if test="remark != null">`remark` = #{remark}, </if>
+			<if test="version != null">`version` = #{version}, </if>
+			<if test="modifyName != null">`modify_name` = #{modifyName}, </if>
+			<if test="modifyTime != null">`modify_time` = #{modifyTime}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from od_field_detail where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from od_field_detail where id in 
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

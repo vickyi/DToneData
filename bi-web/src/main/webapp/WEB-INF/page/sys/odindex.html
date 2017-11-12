@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>指标表</title>
+#parse("sys/header.html")
+	<style>
+		.col-sm-1{width:15%}
+	</style>
+</head>
+<body>
+<div id="rrapp" v-cloak>
+	<div v-show="showList ">
+		<div class="form-inline grid-btn">
+			<div class="form-group">
+				<label>版本</label>&nbsp;
+				<select  name="version" class="form-control" v-model="q.version">
+					<option value="1">最新</option>
+					<option value="2">所有</option>
+				</select>&nbsp;
+			</div>
+			<div class="form-group">
+				<label>业务类型</label>&nbsp;
+				<select name="business_type" class="form-control" v-model="q.business_type">
+					<option value="">全部</option>
+					<option value="流量">流量</option>
+					<option value="会员">会员</option>
+					<option value="销售">销售</option>
+					<option value="售后">售后</option>
+					<option value="品控">品控</option>
+					<option value="财务">财务</option>
+					<option value="客服">客服</option>
+					<option value="供应链管理">供应链管理</option>
+					<option value="违规处罚">违规处罚</option>
+				</select>&nbsp;
+			</div>
+			<div class="form-group">
+				<label >指标类型</label>&nbsp;
+				<select  name="index_type" class="form-control" v-model="q.index_type">
+					<option value="">全部</option>
+					<option value="术语">术语</option>
+					<option value="基础指标">基础指标</option>
+					<option value="衍生指标">衍生指标</option>
+					<option value="复合指标">复合指标</option>
+					<option value="维度">维度</option>
+				</select>&nbsp;
+			</div>
+			<div class="form-group">
+				<label >状态</label>&nbsp;
+				<select  name="index_type" class="form-control" v-model="q.status">
+					<option value="">全部</option>
+					<option value="1">有效</option>
+					<option value="0">无效</option>
+				</select>&nbsp;
+			</div>
+			<div class="form-group">
+				<label >&nbsp;</label>
+				<input type="text" name="index_name" id="search-indexName" class="form-control" v-model="q.index_name" autocomplete="off" data-provide="typeahead" placeholder="请输入指标名称"/>
+			</div>
+			<a class="btn btn-primary" @click="query"><i class="fa fa-plus"></i>&nbsp;查询</a>
+			<a class="btn btn-primary" @click="exportCsv">导出</a>
+			#if($shiro.hasPermission("odindex:save"))
+			<a class="btn btn-primary" @click="add" style="float:right"><i class="fa fa-plus"></i>&nbsp;新增</a>
+			#end
+			<!--#if($shiro.hasPermission("odindex:update"))
+			<a class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>
+			#end
+			#if($shiro.hasPermission("odindex:delete"))
+			<a class="btn btn-primary" @click="del"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+			#end-->
+		</div>
+	    <table id="jqGrid"></table>
+	    <div id="jqGridPager"></div>
+    </div>
+    
+    <div v-show="!showList" class="panel panel-default">
+		<div class="panel-heading">{{title}}</div>
+		<form class="form-horizontal" style="width:800px;">
+			<div class="form-group">
+
+			   	<div class="col-sm-1 control-label" style="width:16%">指标名称&nbsp;<span style="color:red">*</span></div>
+				<template v-if="odIndex.id">
+					<div class="col-sm-1" style="width:30%; margin-top: 7px;">
+						{{odIndex.indexName}}
+						<input type="hidden" class="form-control" v-model="odIndex.indexName" placeholder="指标名称"/>
+					</div>
+				</template>
+				<template v-else>
+					<div class="col-sm-1" style="width:33%">
+						<input type="text" class="form-control" v-model="odIndex.indexName" placeholder="指标名称"/>
+					</div>
+				</template>
+				<div class="col-sm-1 control-label" style="width:20%">指标英文名称&nbsp;<span style="color:red">*</span></div>
+				<div class="col-sm-1" style="width:33%">
+					<input type="text" class="form-control" v-model="odIndex.index" placeholder="指标英文名称"/>
+				</div>
+			</div>
+			<div class="form-group">
+			   	<div class="col-sm-1 control-label" style="width:16%">业务类型&nbsp;<span style="color:red">*</span></div>
+			   	<div class="col-sm-1" style="width:30%">
+					<select  name="index_type" class="form-control" v-model="odIndex.businessType">
+						<option value="" selected>请选择</option>
+						<option value="流量">流量</option>
+						<option value="会员">会员</option>
+						<option value="销售">销售</option>
+						<option value="售后">售后</option>
+						<option value="品控">品控</option>
+						<option value="财务">财务</option>
+						<option value="客服">客服</option>
+						<option value="供应链管理">供应链管理</option>
+						<option value="违规处罚">违规处罚</option>
+					</select>
+			    </div>
+				<div class="col-sm-1 control-label" style="width:20%">指标类型&nbsp;<span style="color:red">*</span></div>
+				<div class="col-sm-1" style="width:33%">
+					<select  name="index_type" class="form-control" v-model="odIndex.indexType" @change="updateIndexType" >
+						<option value="">请选择</option>
+						<option value="术语">术语</option>
+						<option value="基础指标">基础指标</option>
+						<option value="衍生指标">衍生指标</option>
+						<option value="复合指标">复合指标</option>
+						<option value="维度">维度</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label" style="width:16%">指标定义&nbsp;<span style="color:red">*</span></div>
+				<div class="col-sm-1" style="width:42%">
+					<input type="text" class="form-control" v-model="odIndex.indexDesc" placeholder="指标定义"/>
+				</div>
+				<div class="col-sm-1" style="width:40%">
+					<span style="font-size: 11px;"> * 当指标定义中引用了术语或其他指标，需用 <> 标识</span>
+				</div>
+			</div>
+			<template v-if="showdatabase">
+			<div class="form-group">
+			   	<div class="col-sm-1 control-label"  style="width:16%">数据库类型&nbsp;<span style="color:red">*</span></div>
+			   	<div class="col-sm-1" style="width:36%">
+					<select  name="index_type" class="form-control" style="width:80%" v-model="odIndex.database">
+						<option value="dw" selected>hive.dw</option>
+						<option value="dm" selected>hive.dm</option>
+					</select>
+			    </div>
+				<div class="col-sm-1 control-label"  style="width:14%">表名&nbsp;<span style="color:red">*</span></div>
+				<div class="col-sm-1"  style="width:25%">
+					<input type="text" class="form-control" v-model="odIndex.databaseTable" placeholder="表名"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label"  style="width:16%">指标计算公式&nbsp;<span style="color:red">*</span></div>
+				<div class="col-sm-1"  style="width:82%">
+					<input type="text" class="form-control" v-model="odIndex.indexCompute" placeholder="指标的计算公式"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label" style="width:16%">限制条件</div>
+				<div class="col-sm-1" style="width:84%">
+					<input type="text" class="form-control" v-model="odIndex.whereString" placeholder="限制条件"/>
+				</div>
+			</div>
+			</template>
+			<div class="form-group">
+			   	<div class="col-sm-1 control-label" style="width:16%">应用场景</div>
+			   	<div class="col-sm-1" style="width:84%">
+			      <input type="text" class="form-control" v-model="odIndex.useScenes" placeholder="应用场景"/>
+			    </div>
+			</div>
+			<div class="form-group">
+			   	<div class="col-sm-1 control-label" style="width:16%">olap报表</div>
+			   	<div class="col-sm-1" style="width:58%">
+			      <input type="text" class="form-control" v-model="odIndex.olapNodes" placeholder="olap 节点"/>
+			    </div>
+				<div class="col-sm-1" style="width:26%">
+					<span style="font-size: 11px;"> * 格式：多个报表间用；分隔。</span>
+				</div>
+			</div>
+			<div class="form-group">
+			   	<div class="col-sm-1 control-label" style="width:16%">观星台报表</div>
+			   	<div class="col-sm-1" style="width:58%">
+			      <input type="text" class="form-control" v-model="odIndex.gxtNodes" placeholder="观星台 节点"/>
+			    </div>
+				<div class="col-sm-1" style="width:26%">
+					<span style="font-size: 11px;"> * 格式：多个报表间用；分隔。</span>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label" style="width:16%">状态&nbsp;<span style="color:red">*</span></div>
+				<div class="col-sm-1" style="width:84%;margin-top: 5px;">
+					<input type="radio" value="1" name="status" v-model="odIndex.status" /> 有效 &nbsp;
+					<input type="radio" value="0" checked name="status" v-model="odIndex.status" /> 无效 &nbsp;
+				</div>
+			</div>
+
+			<div class="form-group" v-if="odIndex.id">
+				<input type="hidden" v-model="odIndex.version">
+			   	<div class="col-sm-1 control-label" style="width:16%">版本&nbsp;<span style="color:red">*</span></div>
+				<div class="col-sm-1" style="width:84%;margin-top: 5px;">
+					<input type="radio" value="1" name="version" v-model="odIndex.versionSelect" /> 大版本 &nbsp;
+					<input type="radio" value="2" name="version" v-model="odIndex.versionSelect" /> 小版本 &nbsp;
+					<input type="radio" value="3" name="version" v-model="odIndex.versionSelect" /> 不更改 &nbsp;
+				</div>
+			</div>
+			<div class="form-group">
+			   	<div class="col-sm-1 control-label" style="width:16%">更改说明</div>
+			   	<div class="col-sm-1" style="width:84%;">
+			      <input type="text" class="form-control" v-model="odIndex.modifyDesc" placeholder="更改说明"/>
+			    </div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label"></div>
+				<input type="button" class="btn btn-primary" @click="saveOrUpdate" value="确定"/>
+				&nbsp;&nbsp;<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+			</div>
+		</form>
+	</div>
+</div>
+
+
+<script src="${rc.contextPath}/js/sys/odindex.js?_${date.systemTime}"></script>
+</body>
+</html>

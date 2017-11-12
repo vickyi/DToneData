@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans-4.2.xsd        
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-4.2.xsd
+        http://www.springframework.org/schema/tx 
+     	http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+
+    <tx:annotation-driven/>
+    <!--<context:property-placeholder location="classpath*:db.properties" />-->
+
+    <bean id="jdbcPropertyPlaceholder"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="ignoreUnresolvablePlaceholders" value="true" />
+        <property name="locations">
+            <list>
+                <value>classpath*:${profiles.activation:dev}/db.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean class="ch.qos.logback.ext.spring.ApplicationContextHolder"/>
+    <bean class="ch.qos.logback.core.rolling.RollingFileAppender"/>
+
+    <bean id="dataSourceOD" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <property name="url">
+            <value>${jdbc.url}</value>
+        </property>
+        <property name="username">
+            <value>${jdbc.username}</value>
+        </property>
+        <property name="password">
+            <value>${jdbc.password}</value>
+        </property>
+        <property name="initialSize">
+            <value>${jdbc.initialSize}</value>
+        </property>
+        <property name="maxActive">
+            <value>${jdbc.maxActive}</value>
+        </property>
+        <property name="proxyFilters">
+            <list>
+                <ref bean="stat-filter"/>
+                <ref bean="wall-filter"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="dataSourceStar" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <property name="url">
+            <value>${star_jdbc.url}</value>
+        </property>
+        <property name="username">
+            <value>${star_jdbc.username}</value>
+        </property>
+        <property name="password">
+            <value>${star_jdbc.password}</value>
+        </property>
+        <property name="initialSize">
+            <value>${star_jdbc.initialSize}</value>
+        </property>
+        <property name="maxActive">
+            <value>${star_jdbc.maxActive}</value>
+        </property>
+        <property name="proxyFilters">
+            <list>
+                <ref bean="stat-filter"/>
+                <ref bean="wall-filter"/>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 动态数据源 -->
+    <bean id="dataSource" class="com.bi.dsRouting.RoutingDataSource">
+        <property name="targetDataSources">
+            <map key-type="com.bi.dsRouting.RoutingStrategy">
+                <!-- jdbc-key-1 和 jdbc-key-2 配置在 db.properties 中 -->
+                <entry key="${jdbc_ONEDATA}" value-ref="dataSourceOD"/>
+                <entry key="${jdbc_STAR}" value-ref="dataSourceStar"/>
+            </map>
+        </property>
+        <!-- 默认目标数据源为 onedata 数据源 -->
+        <property name="defaultTargetDataSource" ref="dataSourceOD"/>
+    </bean>
+
+    <bean id="stat-filter" class="com.alibaba.druid.filter.stat.StatFilter">
+        <property name="slowSqlMillis" value="1000"/>
+        <property name="logSlowSql" value="true"/>
+        <property name="mergeSql" value="true"/>
+    </bean>
+
+    <bean id="wall-filter" class="com.alibaba.druid.wall.WallFilter">
+        <property name="dbType" value="mysql"/>
+        <property name="config" ref="wall-filter-config"/>
+    </bean>
+
+    <bean id="wall-filter-config" class="com.alibaba.druid.wall.WallConfig">
+        <property name="multiStatementAllow" value="true"/>
+    </bean>
+
+    <bean id="druid-stat-interceptor" class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor"></bean>
+    <bean id="druid-stat-pointcut" class="org.springframework.aop.support.JdkRegexpMethodPointcut" scope="prototype">
+        <property name="patterns">
+            <list>
+                <value>com.bi.controller.*</value>
+                <value>com.bi.service.*</value>
+            </list>
+        </property>
+    </bean>
+    <aop:config>
+        <aop:advisor advice-ref="druid-stat-interceptor" pointcut-ref="druid-stat-pointcut"/>
+    </aop:config>
+
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource">
+            <ref bean="dataSource"/>
+        </property>
+    </bean>
+
+    <!-- 配置事务异常封装 -->
+    <bean id="persistenceExceptionTranslationPostProcessor"
+          class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+
+    <!--  声明式容器事务管理 ,transaction-manager指定事务管理器为transactionManager -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="delete*" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="classpath:mybatis.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.bi.dao"/>
+    </bean>
+
+    <!--Spring JdbcTemplate-->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource">
+            <ref bean="dataSource"/>
+        </property>
+    </bean>
+</beans>

@@ -1,0 +1,7 @@
+.idea/
+*/target/*
+*.iml
+
+/bi-api/target/
+/bi-web/target/
+/bi-common/target/

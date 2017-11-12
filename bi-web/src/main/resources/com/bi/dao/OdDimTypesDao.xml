@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bi.dao.OdDimTypesDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bi.entity.OdDimTypesEntity" id="odDimTypesMap">
+        <result property="incId" column="inc_id"/>
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="typeId" column="type_id"/>
+        <result property="typeName" column="type_name"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+        <result property="lastModified" column="last_modified"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.bi.entity.OdDimTypesEntity">
+		select * from od_dim_types where inc_id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.bi.entity.OdDimTypesEntity">
+		select * from od_dim_types
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by inc_id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from od_dim_types 
+	</select>
+	 
+	<insert id="save" parameterType="com.bi.entity.OdDimTypesEntity" useGeneratedKeys="true" keyProperty="incId">
+		insert into od_dim_types
+		(
+			`id`, 
+			`name`, 
+			`type_id`, 
+			`type_name`, 
+			`del_flag`, 
+			`create_time`, 
+			`last_modified`
+		)
+		values
+		(
+			#{id}, 
+			#{name}, 
+			#{typeId}, 
+			#{typeName}, 
+			#{delFlag}, 
+			#{createTime}, 
+			#{lastModified}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.bi.entity.OdDimTypesEntity">
+		update od_dim_types 
+		<set>
+			<if test="id != null">`id` = #{id}, </if>
+			<if test="name != null">`name` = #{name}, </if>
+			<if test="typeId != null">`type_id` = #{typeId}, </if>
+			<if test="typeName != null">`type_name` = #{typeName}, </if>
+			<if test="delFlag != null">`del_flag` = #{delFlag}, </if>
+			<if test="createTime != null">`create_time` = #{createTime}, </if>
+			<if test="lastModified != null">`last_modified` = #{lastModified}</if>
+		</set>
+		where inc_id = #{incId}
+	</update>
+	
+	<delete id="delete">
+		delete from od_dim_types where inc_id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		delete from od_dim_types where inc_id in 
+		<foreach item="incId" collection="array" open="(" separator="," close=")">
+			#{incId}
+		</foreach>
+	</delete>
+
+</mapper>

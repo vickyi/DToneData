@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>数据字典</title> #parse("sys/header.html")
+<style>
+.lab { height: 34px; line-height: 34px;}
+.wt7 { width: 7%;}
+.wt14 { width: 14%;}
+.pd0 { padding: 0;}
+.textl { text-align: left;}
+.mt10 { margin-top: 10px;}
+.nav-list ul { width: 100%; float: left; border-bottom: 1px solid #ccc; list-style: none; font-weight: bold; cursor: pointer;}
+.nav-list ul li { float: left; width: 100px; text-align: center;}
+.nav-list ul li.on { border-bottom: 5px solid #009688; color: #009688; }
+
+.list-item { float: left; }
+.list-item table td,th{ text-align: center;}
+
+.td-wrap {word-wrap: break-word; table-layout: fixed;}
+.hshow {    width: 80px;
+    white-space: nowrap;
+    overflow: hidden;}
+    
+.w100 { width: 100px; }
+.w200 { width: 200px; }
+.w300 { width: 300px;}
+
+</style>
+
+</head>
+<body>
+	<div id="rrapp" v-cloak>
+		<div v-show="showList">
+			<div class="grid-btn">
+				<div class="col-sm-1">
+					<label class="form-label lab">数据主题</label> 
+				</div>	
+				<div class=" col-sm-1 wt14">
+					<!-- 获取枚举值 -->
+					<select name="type"
+						class="form-control" v-model="q.type">
+						<option value="-1">全部</option>
+						<option v-for="option in keymap[1]" v-bind:value="option.id">
+                            {{ option.name }}
+                        </option>
+					</select>
+				</div>
+				<div class=" col-sm-1 wt7">
+					<label class="form-label lab">状态</label>
+					</div>
+				<div class=" col-sm-1 wt14">
+					<select name="status"
+						class="form-control" v-model="q.status">
+						<option value="-1">全部</option>
+						<option value="1">有效</option>
+						<option value="0">无效</option>
+					</select>
+				</div>
+				<div class=" col-sm-1 wt14">
+					<select name="search_type"
+						class="form-control" v-model="q.search_type">
+						<option value="1">表搜索</option>
+						<option value="0">字段搜索</option>
+					</select>
+				</div>
+				<div class=" col-sm-2">
+					<input name="search_txt" type="text" class="form-control" v-model="q.search_txt"
+						@keyup.enter="query" placeholder="请输入内容">
+				</div>
+
+				<a class="btn btn-primary" @click="query">查询</a>
+ 
+			</div>
+			<table id="jqGrid"></table>
+			<div id="jqGridPager"></div>
+		</div>
+
+		
+		<!-- 表数据详细页面 -->
+		<div v-show="showDetail">
+			<div class="grid-btn">
+				<div class="col-sm-5">
+					<label class="form-label lab">表名:{{tableinfo.dbname}}<span v-if="tableinfo.dbname">.</span>{{tableinfo.tablename}}</label> 
+				</div>
+				<div class="col-sm-2">
+					<label class="form-label lab">归属主题:{{tableinfo.topicStr}}</label> 
+				</div>	
+				
+				<input type="button" class="btn btn-warning" @click="reload" value="返回" />
+			</div>
+			
+			<div id="tabs">
+				<div class="grid-btn nav-list">
+					<ul>
+						<li data-ref="tb1">表字段</li>
+						<li data-ref="tb2">数据实例</li>
+						<li data-ref="tb3">历史版本</li>
+					</ul>
+				</div>
+				<div id="tb1" class="list-item">
+					<div class="ui-jqgrid" style="border-top: 0px;border-bottom: 0px;">
+						<div class="ui-jqgrid-hdiv">
+							<table class="ui-jqgrid-htable ui-common-table table table-bordered">
+								<tr class="ui-jqgrid-labels">
+									<th class="ui-th-column ui-th-ltr">
+										<div class="ui-th-div ui-jqgrid-sortable">序号</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr" style="width: 130px;">
+										<div class="ui-th-div ui-jqgrid-sortable">字段英文</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr" style="width: 130px;">
+										<div class="ui-th-div ui-jqgrid-sortable">字段中文名</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr">
+										<div class="ui-th-div ui-jqgrid-sortable">字段类型</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr">
+										<div class="ui-th-div ui-jqgrid-sortable">可否为空</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr">
+										<div class="ui-th-div ui-jqgrid-sortable">是否主键</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr">
+										<div class="ui-th-div ui-jqgrid-sortable">启用时间</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr">
+										<div class="ui-th-div ui-jqgrid-sortable">失效时间</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr">
+										<div class="ui-th-div ui-jqgrid-sortable">关联维表</div>
+									</th>
+									<th class="ui-th-column ui-th-ltr">
+										<div class="ui-th-div ui-jqgrid-sortable">备注</div>
+									</th>
+								</tr>
+								<tbody v-if="tableData.fields != ''">
+									<tr class="jqgrow ui-row-ltr" v-for="(item, index) in tableData.fields">
+										<td class="jqgrid-rownum ">{{index+=1}}</td>
+										<td class="jqgrid-rownum ">{{item.field}}</td>
+										<td class="jqgrid-rownum td-wrap">{{item.fieldName}}</td>
+										<td class="jqgrid-rownum ">{{item.fieldType}}({{item.fieldLength}})</td>
+										<td class="jqgrid-rownum ">
+											<span class="label label-success">{{item.isNull ? 'Y' : 'N'}}</span>
+										</td>
+										<td class="jqgrid-rownum ">
+											<span class="label label-success">{{item.isKey ? 'Y' : 'N'}}</span>
+										</td>
+										<td class="jqgrid-rownum ">{{item.enabledTime}}</td>
+										<td class="jqgrid-rownum ">{{item.expiryTime}}</td>
+										<td class="jqgrid-rownum ">{{item.relationTable}}</td>
+										<td class="jqgrid-rownum ">{{item.remark}}</td>
+									</tr>
+								</tbody>
+								
+								<!-- 数据为空，则提示 -->
+								<tbody v-if="tableData.fields == ''">
+									<tr class="jqgrow ui-row-ltr">
+										<td colspan="10">没有表字段数据</td>
+									</tr>
+								</tbody>	
+							</table>
+									
+						</div>
+					</div>
+					
+				</div>
+				<div id="tb2" class="list-item">
+				
+					<div class="ui-jqgrid" style="border-top: 0px;border-bottom: 0px;">
+						<div class="ui-jqgrid-hdiv">
+							
+							<div id="odtable_datas" style="overflow: auto;" >
+									<table v-if="tableinfo.datas != undefined && tableinfo.datas != ''" class="ui-jqgrid-htable ui-common-table table table-bordered">
+										<tr class="ui-jqgrid-labels">
+											<th style="width: 100px;"><div class="ui-th-div ui-jqgrid-sortable">序号</div></th>
+											<th style="width: 150px;" class="ui-th-column ui-th-ltr" v-for="item in tableinfo.fieldList">
+												<div class="ui-th-div ui-jqgrid-sortable" v-bind:title="item">{{item}}</div>
+											</th>
+										</tr>
+										<tbody>
+											<tr class="jqgrow ui-row-ltr" v-for="(item, index) in tableinfo.datas">
+												<td class="jqgrid-rownum ">{{index+=1}}</td>
+												<!-- v-for嵌套循环，变量作为key读取数据 -->
+												<td class="jqgrid-rownum" v-for="field in tableinfo.fieldList" v-bind:title="item[field]">{{item[field]}}</td>
+											</tr>
+										</tbody>
+									</table>
+							</div>	
+							
+							<table v-if="tableinfo.datas == '' || tableinfo.datas == undefined" class="ui-jqgrid-htable ui-common-table table table-bordered">
+								<tr>
+									<td>没有数据实例</td>
+								</tr>
+							</table>
+							
+									
+						</div>
+					</div>
+					
+				</div>
+				
+				<div id="tb3" class="list-item">
+				<!-- 历史版本 -->
+				
+				<div class="ui-jqgrid" style="border-top: 0px;border-bottom: 0px;">
+						<div class="ui-jqgrid-hdiv">
+						
+				<div id="odtable_history" style="overflow: auto;" >
+							<table class="ui-jqgrid-htable ui-common-table table table-bordered">
+								<tr class="ui-jqgrid-labels">
+									<th class="w100">
+										<div class="ui-th-div ui-jqgrid-sortable">版本号</div>
+									</th>
+									<th class="w100">
+										<div class="ui-th-div ui-jqgrid-sortable">归属主题</div>
+									</th>
+									<th class="w300">
+										<div class="ui-th-div ui-jqgrid-sortable">表名</div>
+									</th>
+									<th class="w200">
+										<div class="ui-th-div ui-jqgrid-sortable">表描述</div>
+									</th>
+									<th class="w100">
+										<div class="ui-th-div ui-jqgrid-sortable">数据库类型</div>
+									</th>
+									<th class="w200">
+										<div class="ui-th-div ui-jqgrid-sortable">更新逻辑</div>
+									</th>
+									<th class="w100">
+										<div class="ui-th-div ui-jqgrid-sortable">更新频率</div>
+									</th>
+									<th class="w200">
+										<div class="ui-th-div ui-jqgrid-sortable">数据范围</div>
+									</th>
+									<th class="w200">
+										<div class="ui-th-div ui-jqgrid-sortable">使用说明</div>
+									</th>
+									<th class="w200">
+										<div class="ui-th-div ui-jqgrid-sortable">变更说明</div>
+									</th>
+									<th class="w100">
+										<div class="ui-th-div ui-jqgrid-sortable">负责人</div>
+									</th>
+									<th class="w200">
+										<div class="ui-th-div ui-jqgrid-sortable">更改日期</div>
+									</th>
+								</tr>
+								<tbody>
+									<tr class="jqgrow ui-row-ltr" v-for="(item, index) in tableData.tablelist">
+										<td class="jqgrid-rownum ">{{item.version}}</td>
+										<td class="jqgrid-rownum ">
+											<span class="label label-info" >{{item.dataTopicStr}}</span>
+										</td>
+										<td class="jqgrid-rownum hshow" v-bind:title="item.tableName">{{item.tableName}}</td>
+										<td class="jqgrid-rownum hshow" v-bind:title="item.tableDesc">{{item.tableDesc}}</td>
+										<td class="jqgrid-rownum "><span class="label label-info" >{{item.databaseTypeStr}}</span></td>
+										<td class="jqgrid-rownum hshow" v-bind:title="item.updateLogic">{{item.updateLogic}}</td>
+										<td class="jqgrid-rownum "><span class="label label-info" >{{item.updateFrequencyStr}}</span></td>
+										<td class="jqgrid-rownum hshow" v-bind:title="item.dataRange">{{item.dataRange}}</td>
+										<td class="jqgrid-rownum hshow" v-bind:title="item.instructions">{{item.instructions}}</td>
+										<td class="jqgrid-rownum" v-bind:title="item.modifyDesc">{{item.modifyDesc}}</td>
+										<td class="jqgrid-rownum ">{{item.owner}}</td>
+										<td class="jqgrid-rownum ">{{item.modifyTime}}</td>
+									</tr>
+								</tbody>
+							</table>
+									
+					</div>
+					
+					</div>
+					</div>
+					
+				</div>
+				<!-- tb3 end -->
+				
+			</div>
+			
+			
+		</div>
+		
+	</div>
+
+	<script src="${rc.contextPath}/js/sys/odtablefront.js?_${date.systemTime}"></script>
+	<script type="text/javascript">  
+  
+		// table 内容切换
+		$(document).ready(function() {  
+		  	
+			// 全部隐藏
+		    $(".list-item").hide();  
+		    $("#tabs li:first").addClass("on").show(); 
+		    $(".list-item:first").show(); 
+		      
+		    // 事件触发
+		    $(".nav-list li").click(function() {  
+		        $(".nav-list li").removeClass("on"); 
+		        $(this).addClass("on"); 
+		        $(".list-item").hide();  
+		        var activeTab = $(this).attr("data-ref");   
+		        $("#"+activeTab).fadeIn(); 
+		        return false;  
+		    });  
+		  
+		    var pagewidth = $(window).width() - 20;
+		    $("#odtable_datas").width(pagewidth);
+		    $("#odtable_history").width(pagewidth);
+		    
+		});  
+	</script>
+</body>
+</html>
